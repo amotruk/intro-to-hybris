@@ -1,0 +1,8 @@
+#Ant properties
+#Tue Jan 12 10:51:39 CET 2016
+builddate=20160112 1051
+description=training
+name=training
+vendor=hybris
+version=5.5.1.8
+version.api=5.5.1

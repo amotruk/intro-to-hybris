@@ -15,8 +15,8 @@
 		<extension name="hmc" />
 		<extension name="mcc" />
 		<extension name="platformhmc" />
-		<!-- ext-training -->
 		
+		<!-- ext-training -->
 		<extension name="trainingfacades" />
 		<extension name="trainingcore" />
 		<extension name="trainingfulfilmentprocess" />
@@ -24,6 +24,8 @@
 		<extension name="traininginitialdata" />
 		<extension name="trainingstorefront" />
 		<extension name="trainingtest" />
+		
+		<extension name="training" />
 		
 	</extensions>
 </hybrisconfig>
