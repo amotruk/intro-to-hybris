@@ -20,28 +20,29 @@
 			xsi:noNamespaceSchemaLocation="items.xsd">
 
 	<relations>
-		<relation code="Customer2Organisation" autocreate="true" localized="false">
-			<deployment table="CustomersOrganisationsRel" typecode="1337" />
+		<relation code="Customer2Organization" autocreate="true" localized="false">
+			<deployment table="CustsOrgsRel" typecode="10001" />
 			<sourceElement type="Customer" qualifier="customers" cardinality="many"></sourceElement>
-			<targetElement type="Organisation" qualifier="organisations" cardinality="many"></targetElement>
+			<targetElement type="Organization" qualifier="organizations" cardinality="many"></targetElement>
 		</relation>
-	</relations>		
-			
+	</relations>
+
 	<itemtypes>
 		<itemtype code="Customer" autocreate="false" generate="false">
 			<attributes>
-				<attribute qualifier="status" type="java.lang.Boolean" generate="true">					
+				<attribute qualifier="status" type="java.lang.Boolean" generate="true">
 					<modifiers initial="true" read="true" write="true"/>
 					<persistence type="property"/>
 				</attribute>
-				<attribute qualifier="attemptCount" type="java.lang.Integer" generate="true">					
+				<attribute qualifier="attemptCount" type="java.lang.Integer" generate="true">
 					<modifiers initial="0" read="true" write="true"/>
 					<persistence type="property"/>
 				</attribute>
 			</attributes>
 		</itemtype>
-		
-		<itemtype code="Organisation" autocreate="true" generate="true" jaloclass="com.epam.training.jalo.Organisation">
+
+		<itemtype code="Organization" autocreate="true" generate="true">
+			<deployment table="Organizations" typecode="10002" />
 			<attributes>
 				<attribute qualifier="id" type="java.lang.Integer">					
 					<modifiers optional="false" read="true" write="true"/>
