@@ -35,7 +35,14 @@
 	If you want to configure beans for your web module please have a look at
 	your web/webroot/WEB-INF/<extname>-web-spring.xml.
 	-->
-	
+
+	<bean id="customersNumberAttributeHandler" class="com.epam.training.attributehandlers.CustomersNumberAttributeHandler">
+		<property name="organizationService" ref="organizationService"/>
+	</bean>
+
+	<bean id="organizationService" class="com.epam.training.service.impl.DefaultOrganizationService">
+	</bean>
+
 	<!--  Example how to override a manager -->
 	<!--
 	<bean id="core.productManager"   class="com.epam.training.jalo.TrainingProductManager" 	init-method="init"	destroy-method="destroy" />

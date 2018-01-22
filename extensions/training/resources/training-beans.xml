@@ -19,7 +19,7 @@
 
 	<!--
 		Example Data POJO
-	
+
 	<bean class="com.epam.training.data.MyPojo">
 		<property name="id" type="String"/>
 		<property name="flag" type="boolean"/>
