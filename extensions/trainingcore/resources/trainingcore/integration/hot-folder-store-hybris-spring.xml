@@ -12,11 +12,12 @@
 -->
 
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:int="http://www.springframework.org/schema/integration"
-	xmlns:file="http://www.springframework.org/schema/integration/file"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:file="http://www.springframework.org/schema/integration/file"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
 		http://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/integration
 		http://www.springframework.org/schema/integration/spring-integration.xsd
@@ -24,26 +25,63 @@
 		http://www.springframework.org/schema/integration/file/spring-integration-file.xsd
 		http://www.springframework.org/schema/context
         http://www.springframework.org/schema/context/spring-context.xsd">
-		
-    <context:annotation-config/> 
 
-	<bean id="baseDirectoryHybris" class="java.lang.String">
-		<constructor-arg value="#{baseDirectory}/${tenantId}/hybris" />
-	</bean>
-	<!-- 1) Scan for files -->
-	<file:inbound-channel-adapter id="batchFilesHybris" directory="#{baseDirectoryHybris}"
-		filename-regex="^(.*)-(\d+)\.csv" comparator="fileOrderComparator">
-		<int:poller fixed-rate="1000" />
-	</file:inbound-channel-adapter>
+    <context:annotation-config/>
 
-	<!-- 2) move the file to processing and setup header -->
-	<file:outbound-gateway request-channel="batchFilesHybris" reply-channel="batchFilesHybrisProc"
-		directory="#{baseDirectoryHybris}/processing" delete-source-files="true" />
-	<int:service-activator input-channel="batchFilesHybrisProc" output-channel="batchFilesHeaderInit"
-		ref="hybrisHeaderSetupTask" method="execute" />
-	<bean id="hybrisHeaderSetupTask" class="de.hybris.platform.acceleratorservices.dataimport.batch.task.HeaderSetupTask">
-		<property name="catalog" value="hybrisProductCatalog" />
-		<property name="net" value="false" />
-		<property name="storeBaseDirectory" ref="baseDirectoryHybris" />
-	</bean>
+    <bean id="baseDirectoryHybris" class="java.lang.String">
+        <constructor-arg value="#{baseDirectory}/${tenantId}/hybris"/>
+    </bean>
+
+    <file:inbound-channel-adapter id="batchFilesHybris" directory="#{baseDirectoryHybris}"
+                                  filename-regex="^(.*)-(\d+)\.csv" comparator="fileOrderComparator">
+        <int:poller fixed-rate="1000" />
+    </file:inbound-channel-adapter>
+    
+    <file:outbound-gateway request-channel="batchFilesHybris" reply-channel="batchFilesHybrisProc"
+                           directory="#{baseDirectoryHybris}/processing" delete-source-files="true" />
+    <int:service-activator input-channel="batchFilesHybrisProc" output-channel="batchFilesHeaderInit" ref="hybrisHeaderSetupTask"
+                           method="execute" />
+    
+    <bean id="hybrisHeaderSetupTask"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.task.HeaderSetupTask">
+        <property name="catalog" value="HybrisProductCatalog"/>
+        <property name="net" value="false"/>
+        <property name="storeBaseDirectory" ref="baseDirectoryHybris"/>
+    </bean>
+
+    <bean id="batchOrganizationConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          p:mapping="organization"
+          p:converter-ref="batchOrganizationConverter"/>
+
+    <bean id="batchCustomerConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          p:mapping="customer"
+          p:converter-ref="batchCustomerConverter"/>
+
+    <bean id="batchOrganizationConverter"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter">
+        <property name="header">
+            <value>
+                INSERT_UPDATE Organization;id[unique=true];name[unique=true, lang=en];phone;email;customers(uid)
+            </value>
+        </property>
+        <property name="impexRow">
+            <value>;{0};{1};{2};{3};{4}</value>
+        </property>
+        <property name="type" value="Organization"/>
+    </bean>
+
+    <bean id="batchCustomerConverter"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter">
+        <property name="header">
+            <value>
+                INSERT_UPDATE Customer;uid[unique=true];customerID[unique=true];password;name
+            </value>
+        </property>
+        <property name="impexRow">
+            <value>;{0};{1};{2};{3}</value>
+        </property>
+        <property name="type" value="Customer"/>
+    </bean>
 </beans>
