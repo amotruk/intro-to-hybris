@@ -31,11 +31,13 @@
 		<itemtype code="Customer" autocreate="false" generate="false">
 			<attributes>
 				<attribute qualifier="status" type="java.lang.Boolean" generate="true">
-					<modifiers initial="true" read="true" write="true"/>
+					<modifiers read="true" write="true"/>
+					<defaultvalue>true</defaultvalue>
 					<persistence type="property"/>
 				</attribute>
 				<attribute qualifier="attemptCount" type="java.lang.Integer" generate="true">
-					<modifiers initial="0" read="true" write="true"/>
+					<modifiers read="true" write="true"/>
+					<defaultvalue>0</defaultvalue>
 					<persistence type="property"/>
 				</attribute>
 			</attributes>

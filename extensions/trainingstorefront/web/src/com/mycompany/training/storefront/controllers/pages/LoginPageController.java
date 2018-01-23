@@ -13,7 +13,9 @@
  */
 package com.mycompany.training.storefront.controllers.pages;
 
+import com.mycompany.training.storefront.service.CustomerStatusService;
 import de.hybris.platform.acceleratorstorefrontcommons.controllers.pages.AbstractLoginPageController;
+import de.hybris.platform.acceleratorstorefrontcommons.controllers.util.GlobalMessages;
 import de.hybris.platform.acceleratorstorefrontcommons.forms.RegisterForm;
 import de.hybris.platform.cms2.exceptions.CMSItemNotFoundException;
 import de.hybris.platform.cms2.model.pages.AbstractPageModel;
@@ -45,6 +47,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class LoginPageController extends AbstractLoginPageController
 {
 	private HttpSessionRequestCache httpSessionRequestCache;
+	private static final String ACCOUNT_LOCKED_ERROR = "login.error.account.locked";
+	@Resource(name = "customerStatusService")
+	private CustomerStatusService customerStatusService;
 
 	@Override
 	protected String getView()
@@ -84,6 +89,12 @@ public class LoginPageController extends AbstractLoginPageController
 		if (!loginError)
 		{
 			storeReferer(referer, request, response);
+		} else {
+			String username = (String) session.getAttribute("SPRING_SECURITY_LAST_USERNAME");
+			if (!customerStatusService.getCustomerStatus(username)) {
+				GlobalMessages.addErrorMessage(model, ACCOUNT_LOCKED_ERROR);
+				return getDefaultLoginPage(false, session, model);
+			}
 		}
 		return getDefaultLoginPage(loginError, session, model);
 	}
@@ -103,5 +114,13 @@ public class LoginPageController extends AbstractLoginPageController
 	{
 		getRegistrationValidator().validate(form, bindingResult);
 		return processRegisterUserRequest(referer, form, bindingResult, model, request, response, redirectModel);
+	}
+
+	public CustomerStatusService getCustomerStatusService() {
+		return customerStatusService;
+	}
+
+	public void setCustomerStatusService(CustomerStatusService customerStatusService) {
+		this.customerStatusService = customerStatusService;
 	}
 }

@@ -13,6 +13,7 @@
  */
 package com.mycompany.training.storefront.security;
 
+import com.mycompany.training.storefront.service.CustomerStatusService;
 import de.hybris.platform.core.Constants;
 import de.hybris.platform.core.model.user.UserModel;
 import de.hybris.platform.servicelayer.exceptions.UnknownIdentifierException;
@@ -36,122 +37,108 @@ import org.springframework.security.core.userdetails.UserDetails;
 /**
  * Derived authentication provider supporting additional authentication checks. See
  * {@link de.hybris.platform.spring.security.RejectUserPreAuthenticationChecks}.
- * 
+ * <p>
  * <ul>
  * <li>prevent login without password for users created via CSCockpit</li>
  * <li>prevent login as user in group admingroup</li>
  * </ul>
- * 
+ * <p>
  * any login as admin disables SearchRestrictions and therefore no page can be viewed correctly
  */
-public class AcceleratorAuthenticationProvider extends CoreAuthenticationProvider
-{
-	private static final Logger LOG = Logger.getLogger(AcceleratorAuthenticationProvider.class);
-	private static final String ROLE_ADMIN_GROUP = "ROLE_" + Constants.USER.ADMIN_USERGROUP.toUpperCase();
+public class AcceleratorAuthenticationProvider extends CoreAuthenticationProvider {
+    private static final Logger LOG = Logger.getLogger(AcceleratorAuthenticationProvider.class);
+    private static final String ROLE_ADMIN_GROUP = "ROLE_" + Constants.USER.ADMIN_USERGROUP.toUpperCase();
 
-	private BruteForceAttackCounter bruteForceAttackCounter;
-	private UserService userService;
-	private ModelService modelService;
-	private GrantedAuthority adminAuthority = new SimpleGrantedAuthority(ROLE_ADMIN_GROUP);
+    private BruteForceAttackCounter bruteForceAttackCounter;
+    private UserService userService;
+    private ModelService modelService;
+    private GrantedAuthority adminAuthority = new SimpleGrantedAuthority(ROLE_ADMIN_GROUP);
+    private CustomerStatusService customerStatusService;
 
 
-	@Override
-	public Authentication authenticate(final Authentication authentication) throws AuthenticationException
-	{
-		final String username = (authentication.getPrincipal() == null) ? "NONE_PROVIDED" : authentication.getName();
+    @Override
+    public Authentication authenticate(final Authentication authentication) throws AuthenticationException {
+        final String username = (authentication.getPrincipal() == null) ? "NONE_PROVIDED" : authentication.getName();
 
-		if (getBruteForceAttackCounter().isAttack(username))
-		{
-			try
-			{
-				final UserModel userModel = getUserService().getUserForUID(StringUtils.lowerCase(username));
-				userModel.setLoginDisabled(true);
-				getModelService().save(userModel);
-				bruteForceAttackCounter.resetUserCounter(userModel.getUid());
-			}
-			catch (final UnknownIdentifierException e)
-			{
-				LOG.warn("Brute force attack attempt for non existing user name " + username);
-			}
+        if (getBruteForceAttackCounter().isAttack(username)) {
+            try {
+                customerStatusService.lockCustomer(username);
+            } catch (final UnknownIdentifierException e) {
+                LOG.warn("Brute force attack attempt for non existing user name " + username);
+            }
 
-			throw new BadCredentialsException(messages.getMessage("CoreAuthenticationProvider.badCredentials", "Bad credentials"));
+            throw new BadCredentialsException(messages.getMessage("CoreAuthenticationProvider.badCredentials", "Bad credentials"));
 
-		}
+        }
 
-		return super.authenticate(authentication);
+        return super.authenticate(authentication);
 
-	}
+    }
 
-	/**
-	 * @see de.hybris.platform.spring.security.CoreAuthenticationProvider#additionalAuthenticationChecks(org.springframework.security.core.userdetails.UserDetails,
-	 *      org.springframework.security.authentication.AbstractAuthenticationToken)
-	 */
-	@Override
-	protected void additionalAuthenticationChecks(final UserDetails details, final AbstractAuthenticationToken authentication)
-			throws AuthenticationException
-	{
-		super.additionalAuthenticationChecks(details, authentication);
+    /**
+     * @see de.hybris.platform.spring.security.CoreAuthenticationProvider#additionalAuthenticationChecks(org.springframework.security.core.userdetails.UserDetails,
+     * org.springframework.security.authentication.AbstractAuthenticationToken)
+     */
+    @Override
+    protected void additionalAuthenticationChecks(final UserDetails details, final AbstractAuthenticationToken authentication)
+            throws AuthenticationException {
+        super.additionalAuthenticationChecks(details, authentication);
 
-		// Check if user has supplied no password
-		if (StringUtils.isEmpty((String) authentication.getCredentials()))
-		{
-			throw new BadCredentialsException("Login without password");
-		}
+        // Check if user has supplied no password
+        if (StringUtils.isEmpty((String) authentication.getCredentials())) {
+            throw new BadCredentialsException("Login without password");
+        }
 
-		// Check if the user is in role admingroup
-		if (getAdminAuthority() != null && details.getAuthorities().contains(getAdminAuthority()))
-		{
-			throw new LockedException("Login attempt as " + Constants.USER.ADMIN_USERGROUP + " is rejected");
-		}
-	}
+        // Check if the user is in role admingroup
+        if (getAdminAuthority() != null && details.getAuthorities().contains(getAdminAuthority())) {
+            throw new LockedException("Login attempt as " + Constants.USER.ADMIN_USERGROUP + " is rejected");
+        }
+    }
 
-	public void setAdminGroup(final String adminGroup)
-	{
-		if (StringUtils.isBlank(adminGroup))
-		{
-			adminAuthority = null;
-		}
-		else
-		{
-			adminAuthority = new SimpleGrantedAuthority(adminGroup);
-		}
-	}
+    public void setAdminGroup(final String adminGroup) {
+        if (StringUtils.isBlank(adminGroup)) {
+            adminAuthority = null;
+        } else {
+            adminAuthority = new SimpleGrantedAuthority(adminGroup);
+        }
+    }
 
-	protected GrantedAuthority getAdminAuthority()
-	{
-		return adminAuthority;
-	}
+    protected GrantedAuthority getAdminAuthority() {
+        return adminAuthority;
+    }
 
-	protected BruteForceAttackCounter getBruteForceAttackCounter()
-	{
-		return bruteForceAttackCounter;
-	}
+    protected BruteForceAttackCounter getBruteForceAttackCounter() {
+        return bruteForceAttackCounter;
+    }
 
-	@Required
-	public void setBruteForceAttackCounter(final BruteForceAttackCounter bruteForceAttackCounter)
-	{
-		this.bruteForceAttackCounter = bruteForceAttackCounter;
-	}
+    @Required
+    public void setBruteForceAttackCounter(final BruteForceAttackCounter bruteForceAttackCounter) {
+        this.bruteForceAttackCounter = bruteForceAttackCounter;
+    }
 
-	protected UserService getUserService()
-	{
-		return userService;
-	}
+    protected UserService getUserService() {
+        return userService;
+    }
 
-	@Required
-	public void setUserService(final UserService userService)
-	{
-		this.userService = userService;
-	}
+    @Required
+    public void setUserService(final UserService userService) {
+        this.userService = userService;
+    }
 
-	protected ModelService getModelService()
-	{
-		return modelService;
-	}
+    protected ModelService getModelService() {
+        return modelService;
+    }
 
-	@Required
-	public void setModelService(final ModelService modelService)
-	{
-		this.modelService = modelService;
-	}
+    @Required
+    public void setModelService(final ModelService modelService) {
+        this.modelService = modelService;
+    }
+
+    public CustomerStatusService getCustomerStatusService() {
+        return customerStatusService;
+    }
+
+    public void setCustomerStatusService(CustomerStatusService customerStatusService) {
+        this.customerStatusService = customerStatusService;
+    }
 }

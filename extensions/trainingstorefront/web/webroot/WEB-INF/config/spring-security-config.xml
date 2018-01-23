@@ -118,6 +118,7 @@
 		<property name="modelService" ref="modelService" />
 		<property name="userDetailsService" ref="originalUidUserDetailsService" />
 		<property name="adminGroup" value="ROLE_ADMINGROUP"/>
+		<property name="customerStatusService" ref="customerStatusService" />
 	</bean>
 
 	<bean id="coreUserDetailsService" class="de.hybris.platform.spring.security.CoreUserDetailsService"  />
@@ -239,10 +240,13 @@
    </bean>
 
 	<!-- Login Failure Handlers -->
-    <bean id="bruteForceAttackCounter" class="com.mycompany.training.storefront.security.impl.DefaultBruteForceAttackCounter">
-        <constructor-arg name="maxFailedLogins" value="5" />
-        <constructor-arg name="cacheExpiration" value="60" />
-        <constructor-arg name="cacheSizeLimit" value="1000" />
+	<bean id="customerStatusService" class="com.mycompany.training.storefront.service.impl.DefaultCustomerStatusService">
+		<property name="modelService" ref="modelService" />
+		<property name="userDao" ref="userDao" />
+	</bean>
+
+    <bean id="bruteForceAttackCounter" class="com.mycompany.training.storefront.security.impl.EpamBruteForceAttackCounter">
+		<property name="customerStatusService" ref="customerStatusService" />
     </bean>
 
 	<bean id="loginAuthenticationFailureHandler" class="com.mycompany.training.storefront.security.LoginAuthenticationFailureHandler" >
