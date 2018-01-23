@@ -144,7 +144,7 @@ public class LoginPageController extends AbstractRegisterPageController
 		{
 			model.addAttribute("loginError", Boolean.valueOf(loginError));
 
-			if (!customerStatusService.getCustomerStatus(username)) {
+			if (username != null && !customerStatusService.getCustomerStatus(username)) {
 				GlobalMessages.addErrorMessage(model, "login.error.account.locked");
 			} else {
 				GlobalMessages.addErrorMessage(model, "login.error.account.not.found.title");
