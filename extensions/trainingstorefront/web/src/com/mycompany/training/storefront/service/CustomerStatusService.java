@@ -8,7 +8,7 @@ public interface CustomerStatusService {
 
     void resetCustomerAttemptCount(final String userUid);
 
-    boolean getCustomerStatus(final String userUid);
+    boolean customerIsLocked(final String userUid);
 
     void lockCustomer(final String userUid);
 

@@ -15,7 +15,6 @@ package com.mycompany.training.storefront.controllers.pages;
 
 import com.mycompany.training.storefront.service.CustomerStatusService;
 import de.hybris.platform.acceleratorstorefrontcommons.breadcrumb.Breadcrumb;
-import de.hybris.platform.acceleratorstorefrontcommons.controllers.pages.AbstractLoginPageController;
 import de.hybris.platform.acceleratorstorefrontcommons.controllers.pages.AbstractRegisterPageController;
 import de.hybris.platform.acceleratorstorefrontcommons.controllers.util.GlobalMessages;
 import de.hybris.platform.acceleratorstorefrontcommons.forms.GuestForm;
@@ -144,7 +143,7 @@ public class LoginPageController extends AbstractRegisterPageController
 		{
 			model.addAttribute("loginError", Boolean.valueOf(loginError));
 
-			if (username != null && !customerStatusService.getCustomerStatus(username)) {
+			if (username != null && customerStatusService.customerIsLocked(username)) {
 				GlobalMessages.addErrorMessage(model, "login.error.account.locked");
 			} else {
 				GlobalMessages.addErrorMessage(model, "login.error.account.not.found.title");

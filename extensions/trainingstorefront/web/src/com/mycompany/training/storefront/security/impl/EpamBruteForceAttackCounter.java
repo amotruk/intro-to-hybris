@@ -15,7 +15,7 @@ public class EpamBruteForceAttackCounter implements BruteForceAttackCounter {
 
     @Override
     public boolean isAttack(String userUid) {
-        int attemptCount = this.customerStatusService.getCustomerAttemptCount(userUid);
+        int attemptCount = getUserFailedLogins(userUid);
         return attemptCount >= ACCOUNT_LOCK_THRESHOLD;
     }
 
